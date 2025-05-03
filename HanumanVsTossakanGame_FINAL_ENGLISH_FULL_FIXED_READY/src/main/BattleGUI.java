@@ -1,71 +1,160 @@
-
 package main;
 
-import character.Player;
+import battle.AttackerAction;
+import battle.DefenderAction;
+import battle.DamageCalculator;
 import character.Boss;
+import character.Player;
+
 import javax.swing.*;
 import java.awt.*;
+import java.util.Random;
 import java.util.function.IntConsumer;
 
 public class BattleGUI extends JFrame {
-    private IntConsumer battleEndCallback;
+    private final Player player;
+    private final Boss boss;
+    private final JTextArea battleLog;
+    private final JLabel playerStats;
+    private final JLabel bossStats;
+    private final IntConsumer battleEndCallback;
 
-    // Constructor for entering name (original)
-    public BattleGUI() {
-        setTitle("Enter Player Name");
-        setSize(400, 200);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+    private boolean playerTurn; // true = player attack, false = player defend
+    private int turnCount = 1;
 
-        JLabel label = new JLabel("Enter your name:", SwingConstants.CENTER);
-        label.setFont(new Font("TH Sarabun New", Font.PLAIN, 22));
+    private final JPanel actionPanel = new JPanel(new GridLayout(2, 3));
 
-        JTextField nameField = new JTextField();
-        JButton okButton = new JButton("OK");
+    public BattleGUI(Player player, Boss boss, IntConsumer callback) {
+        this.player = player;
+        this.boss = boss;
+        this.battleEndCallback = callback;
 
-        okButton.addActionListener(e -> {
-            String name = nameField.getText().trim();
-            if (!name.isEmpty()) {
-                dispose();
-                GameFlowManager.startGame(name);
-            } else {
-                JOptionPane.showMessageDialog(this, "Please enter a name");
-            }
-        });
-
-        setLayout(new GridLayout(3, 1, 10, 10));
-        add(label);
-        add(nameField);
-        add(okButton);
-        setVisible(true);
-    }
-
-    // ✅ Constructor for battle
-    public BattleGUI(Player player, Boss boss) {
         setTitle("Battle: " + player.getName() + " VS " + boss.getName());
-        setSize(500, 400);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(600, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        JTextArea battleLog = new JTextArea();
+        // Stats panel
+        playerStats = new JLabel();
+        bossStats = new JLabel();
+        updateStats();
+
+        JPanel statsPanel = new JPanel(new GridLayout(1, 2));
+        statsPanel.add(playerStats);
+        statsPanel.add(bossStats);
+        add(statsPanel, BorderLayout.NORTH);
+
+        // Battle log
+        battleLog = new JTextArea();
         battleLog.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(battleLog);
+        add(scrollPane, BorderLayout.CENTER);
 
-        JButton endTurnButton = new JButton("End Turn");
-        endTurnButton.addActionListener(e -> {
-            int turnsUsed = 3; // ตัวอย่างจำนวนเทิร์น
-            if (battleEndCallback != null) {
-                battleEndCallback.accept(turnsUsed);
-            }
-            dispose();
-        });
+        // Action panel
+        add(actionPanel, BorderLayout.SOUTH);
 
-        add(new JScrollPane(battleLog), BorderLayout.CENTER);
-        add(endTurnButton, BorderLayout.SOUTH);
+        // Randomly decide who starts
+        playerTurn = new Random().nextBoolean();
+        appendLog("Turn " + turnCount + ": " + (playerTurn ? "You attack first!" : "Boss attacks first!"));
+        showActionOptions();
+
         setVisible(true);
     }
 
-    public void setBattleEndCallback(IntConsumer callback) {
-        this.battleEndCallback = callback;
+    private void showActionOptions() {
+        actionPanel.removeAll();
+        if (playerTurn) {
+            for (AttackerAction action : AttackerAction.values()) {
+                JButton btn = new JButton(action.name());
+                btn.addActionListener(e -> {
+                    player.setQueuedAttack(action);
+                    DefenderAction bossDefense = boss.chooseDefendAction();
+                    int damage = DamageCalculator.calculate(player, boss, action, bossDefense);
+
+                    appendLog("You used " + action + " | " + boss.getName() + " defended with " + bossDefense);
+
+                    if (DamageCalculator.dodged) {
+                        appendLog(boss.getName() + " dodged your attack!");
+                    } else if (DamageCalculator.countered) {
+                        appendLog("Boss countered your attack!");
+                        player.takeDamage(-damage); // reflected
+                        appendLog("You received " + (-damage) + " reflected damage!");
+                    } else {
+                        boss.takeDamage(damage);
+                        appendLog("Dealt " + damage + " damage!");
+                    }
+
+                    checkBattleEnd();
+                    if (boss.isAlive()) {
+                        playerTurn = false;
+                        turnCount++;
+                        appendLog("---");
+                        appendLog("Turn " + turnCount + ": Defend against " + boss.getName());
+                        showActionOptions();
+                    }
+                });
+                actionPanel.add(btn);
+            }
+        } else {
+            for (DefenderAction action : DefenderAction.values()) {
+                JButton btn = new JButton(action.name());
+                btn.addActionListener(e -> {
+                    player.setQueuedDefense(action);
+                    AttackerAction bossAttack = boss.chooseAttackAction();
+                    int damage = DamageCalculator.calculate(boss, player, bossAttack, action);
+
+                    appendLog(boss.getName() + " used " + bossAttack + " | You defended with " + action);
+
+                    if (DamageCalculator.dodged) {
+                        appendLog("You dodged the attack!");
+                    } else if (DamageCalculator.countered) {
+                        appendLog("You countered the attack!");
+                        boss.takeDamage(-damage); // reflected
+                        appendLog(boss.getName() + " received " + (-damage) + " reflected damage!");
+                    } else {
+                        player.takeDamage(damage);
+                        appendLog("You received " + damage + " damage!");
+                    }
+
+                    checkBattleEnd();
+                    if (player.isAlive()) {
+                        playerTurn = true;
+                        turnCount++;
+                        appendLog("---");
+                        appendLog("Turn " + turnCount + ": Your turn to attack!");
+                        showActionOptions();
+                    }
+                });
+                actionPanel.add(btn);
+            }
+        }
+        actionPanel.revalidate();
+        actionPanel.repaint();
+        updateStats();
+    }
+
+    private void updateStats() {
+        playerStats.setText("<html><b>" + player.getName() + "</b><br>HP: " + player.getHp() + "/" + player.getMaxHp() +
+                "<br>ATK: " + player.getAttack() + "<br>DEF: " + player.getDefense() + "<br>SPD: " + player.getSpeed() + "</html>");
+        bossStats.setText("<html><b>" + boss.getName() + "</b><br>HP: " + boss.getHp() + "/" + boss.getMaxHp() +
+                "<br>ATK: " + boss.getAttack() + "<br>DEF: " + boss.getDefense() + "<br>SPD: " + boss.getSpeed() + "</html>");
+    }
+
+    private void checkBattleEnd() {
+        if (!player.isAlive()) {
+            appendLog("You have been defeated!");
+            dispose();
+            battleEndCallback.accept(turnCount);
+        } else if (!boss.isAlive()) {
+            appendLog("You defeated " + boss.getName() + "!");
+            JOptionPane.showMessageDialog(this, "Victory! Proceed to next stage.");
+            dispose();
+            battleEndCallback.accept(turnCount);
+        }
+    }
+
+    private void appendLog(String message) {
+        battleLog.append(message + "\n");
     }
 }

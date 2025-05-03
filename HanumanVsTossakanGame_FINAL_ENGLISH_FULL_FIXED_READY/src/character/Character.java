@@ -41,6 +41,10 @@ public abstract class Character {
         return hp;
     }
 
+    public int getMaxHp() {
+        return maxHp;
+    }
+
     public int getAttack() {
         return attack;
     }

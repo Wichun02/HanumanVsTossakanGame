@@ -16,7 +16,7 @@ public class GameFlowManager {
     private static int totalTurns = 0;
 
     public static void startGame(String playerName) {
-        player = new Player(playerName, 100, 30, 10, 15);
+        player = new Player(playerName, 10000, 30, 10, 15);
         enemies = EnemyStage.getEnemies();
         stageIndex = 0;
         totalTurns = 0;
@@ -30,8 +30,7 @@ public class GameFlowManager {
         }
 
         Boss currentEnemy = enemies.get(stageIndex);
-        BattleGUI battle = new BattleGUI(player, currentEnemy);
-        battle.setBattleEndCallback(turnsUsed -> {
+        BattleGUI battle = new BattleGUI(player, currentEnemy, turnsUsed -> {
             if (!player.isAlive()) {
                 JOptionPane.showMessageDialog(null, "Game Over! You lost at stage " + (stageIndex + 1));
                 ScoreManager.showFinalScore(player, stageIndex, totalTurns);
@@ -41,7 +40,7 @@ public class GameFlowManager {
             stageIndex++;
             totalTurns += turnsUsed;
 
-            new StatUpgradeGUI(() -> new RestOrContinueGUI(rested -> {
+            new StatUpgradeGUI(player, () -> new RestOrContinueGUI(rested -> {
                 if (rested) {
                     player.restoreHp();
                     totalTurns += 6;
