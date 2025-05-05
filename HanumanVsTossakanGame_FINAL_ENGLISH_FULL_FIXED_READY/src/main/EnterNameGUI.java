@@ -15,6 +15,7 @@ public class EnterNameGUI extends JFrame {
 
         JTextField nameField = new JTextField();
         JButton okButton = new JButton("OK");
+        okButton.setFocusPainted(false);
 
         okButton.addActionListener(e -> {
             String name = nameField.getText().trim();

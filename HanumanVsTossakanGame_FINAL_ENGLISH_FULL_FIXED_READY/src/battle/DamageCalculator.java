@@ -12,14 +12,6 @@ public class DamageCalculator {
         dodged = false;
         countered = false;
 
-        // Fatal Gambit: 5% chance to insta-kill with Finisher
-        if (attacker instanceof Player player && attackAction == AttackerAction.FINISHER && player.hasBlessing("Fatal Gambit")) {
-            if (Math.random() < 0.05) {
-                System.out.println("Fatal Gambit activated! Enemy instantly defeated!");
-                return defender.getHp(); // one-shot kill
-            }
-        }
-
         // Dodge logic
         double baseDodge = 0.1 + 0.4 * ((double) defender.getSpeed() / (attacker.getSpeed() + defender.getSpeed()));
         if (defender instanceof Player p && p.hasBlessing("Evasion")) {
@@ -32,10 +24,11 @@ public class DamageCalculator {
         }
 
         // Base damage
+        int attackerATK = (attacker instanceof Player p) ? p.getTotalAttack() : attacker.getAttack();
         int baseDamage = switch (attackAction) {
-            case ATTACK -> attacker.getAttack() + 5;
-            case FINISHER -> attacker.getAttack() + 25;
-            case SPECIAL_ATTACK -> attacker.getAttack() + 15;
+            case ATTACK -> attackerATK + 5;
+            case FINISHER -> attackerATK + 25;
+            case SPECIAL_ATTACK -> attackerATK + 15;
         };
 
         // Heavy Hands
@@ -60,14 +53,12 @@ public class DamageCalculator {
         }
 
         // Critical Eye (+ Will of Hanuman)
-        boolean isCritical = false;
         if (attacker instanceof Player p && p.hasBlessing("Critical Eye")) {
             double critChance = 0.2;
             if (BlessingPassiveEngine.checkWillOfHanuman(p)) {
                 critChance += 0.3;
             }
             if (Math.random() < critChance) {
-                isCritical = true;
                 baseDamage *= 1.5;
             }
         }

@@ -4,20 +4,25 @@ package main;
 import character.Player;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class ScoreManager {
 
     public static void showFinalScore(Player player, int stagesCleared, int turnsUsed) {
-        // บันทึกคะแนนลง leaderboard
+        // Save score
         LeaderboardManager.addScore(player.getName(), stagesCleared, turnsUsed);
 
-        String message = "Player Name: " + player.getName() +
-                         "\nStages Cleared: " + stagesCleared +
-                         "\nTotal Turns: " + turnsUsed + " เทิร์น";
+        // Format text with proper font to avoid rectangle issue
+        String message = String.format(
+            "<html><b>Player Name:</b> %s<br><b>Stages Cleared:</b> %d<br><b>Total Turns:</b> %d</html>",
+            player.getName(), stagesCleared, turnsUsed
+        );
 
-        JOptionPane.showMessageDialog(null, message, "Final Score", JOptionPane.INFORMATION_MESSAGE);
+        JLabel label = new JLabel(message);
+        label.setFont(new Font("Tahoma", Font.PLAIN, 16)); 
+        JOptionPane.showMessageDialog(null, label, "Final Score", JOptionPane.INFORMATION_MESSAGE);
 
-        // แสดง Leaderboard หลังจบเกม
+        // Show leaderboard
         LeaderboardManager.showLeaderboard();
     }
 }

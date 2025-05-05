@@ -23,6 +23,8 @@ public class Player extends Character {
     private boolean hasBalanceBlessing = false;
     private boolean pendingFreeUpgrade = false;
     private int tempDefense = 0;
+    private int tempAttackBonus = 0;
+    private int tricksterBonus = 0;
 
     private List<Blessing> currentShopBlessings = new ArrayList<>();
 
@@ -66,11 +68,11 @@ public class Player extends Character {
     }
 
     public Set<String> getAllBlessings() {
-        return blessings;
+        return new HashSet<>(blessings);
     }
 
     public Set<String> getBlessings() {
-        return blessings;
+        return new HashSet<>(blessings);
     }
 
     public void addGold(int amount) {
@@ -169,7 +171,14 @@ public class Player extends Character {
     }
 
     public void addSpeed(int amount) {
-        speed += amount;
+        // Trickster cap check
+        if (hasBlessing("Trickster’s Luck") && tricksterBonus < 10) {
+            int addable = Math.min(amount, 10 - tricksterBonus);
+            speed += addable;
+            tricksterBonus += addable;
+        } else if (!hasBlessing("Trickster’s Luck")) {
+            speed += amount;
+        }
     }
 
     public void reduceSpeed(int amount) {
@@ -190,6 +199,14 @@ public class Player extends Character {
 
     public void resetTempDefense() {
         tempDefense = 0;
+    }
+
+    public void setTempAttackBonus(int bonus) {
+        tempAttackBonus = bonus;
+    }
+
+    public int getTotalAttack() {
+        return attack + tempAttackBonus;
     }
 
     public void setBalanceBlessing(boolean value) {
@@ -213,10 +230,10 @@ public class Player extends Character {
     }
 
     public void setCurrentShopBlessings(List<Blessing> blessings) {
-        this.currentShopBlessings = blessings;
+        this.currentShopBlessings = new ArrayList<>(blessings);
     }
 
     public List<Blessing> getCurrentShopBlessings() {
-        return currentShopBlessings == null ? new ArrayList<>() : currentShopBlessings;
+        return currentShopBlessings == null ? new ArrayList<>() : new ArrayList<>(currentShopBlessings);
     }
 }

@@ -24,24 +24,28 @@ public class StatUpgradeGUI extends JFrame {
         statusLabel = new JLabel(getStatusText(), SwingConstants.CENTER);
 
         JButton atk = new JButton("Upgrade ATK");
+        atk.setFocusPainted(false);
         atk.addActionListener(e -> {
             player.upgrade("atk");
             checkFinish(callback);
         });
 
         JButton def = new JButton("Upgrade DEF");
+        def.setFocusPainted(false);
         def.addActionListener(e -> {
             player.upgrade("def");
             checkFinish(callback);
         });
 
         JButton spd = new JButton("Upgrade SPD");
+        spd.setFocusPainted(false);
         spd.addActionListener(e -> {
             player.upgrade("spd");
             checkFinish(callback);
         });
 
         JButton hp = new JButton("Upgrade HP");
+        hp.setFocusPainted(false);
         hp.addActionListener(e -> {
             player.upgrade("hp");
             checkFinish(callback);

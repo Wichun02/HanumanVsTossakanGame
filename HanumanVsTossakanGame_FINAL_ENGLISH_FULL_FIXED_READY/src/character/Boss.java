@@ -19,6 +19,7 @@ public class Boss extends Character {
 
     @Override
     public DefenderAction chooseDefendAction() {
-        return DefenderAction.values()[random.nextInt(DefenderAction.values().length)];
+        DefenderAction[] choices = {DefenderAction.DEFEND, DefenderAction.COUNTER, DefenderAction.SPECIAL_DEFEND};
+        return choices[random.nextInt(choices.length)];
     }
 }

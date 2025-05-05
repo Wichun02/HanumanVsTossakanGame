@@ -1,3 +1,4 @@
+
 package main;
 
 import character.Player;
@@ -6,6 +7,7 @@ import character.EnemyStage;
 import battle.BlessingEffectManager;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -31,7 +33,6 @@ public class GameFlowManager {
             return;
         }
 
-        // Force shop at stage 5, 15, 25
         if (stageNumber % 10 == 5) {
             player.restoreHp();
             JOptionPane.showMessageDialog(null, "You've entered a shop stage! Your HP has been fully restored.");
@@ -45,12 +46,13 @@ public class GameFlowManager {
         Boss currentEnemy = enemies.get(stageIndex);
         new BattleGUI(player, currentEnemy, turnsUsed -> {
             if (!player.isAlive()) {
-                JOptionPane.showMessageDialog(null, "Game Over! You lost at stage " + stageNumber);
+                JLabel label = new JLabel("Game Over! You lost at stage " + stageNumber);
+                label.setFont(new Font("Tahoma", Font.PLAIN, 16));
+                JOptionPane.showMessageDialog(null, label, "Game Over", JOptionPane.INFORMATION_MESSAGE);
                 ScoreManager.showFinalScore(player, stageNumber - 1, totalTurns);
                 return;
             }
 
-            // Gold reward based on stage number
             int minGold = 20;
             int maxGold = Math.min(60, (int) (20 + stageIndex * 1.5));
             int goldEarned = ThreadLocalRandom.current().nextInt(minGold, maxGold + 1);
@@ -62,7 +64,6 @@ public class GameFlowManager {
             player.addGold(goldEarned);
             JOptionPane.showMessageDialog(null, "You earned " + goldEarned + " gold!");
 
-            // Blessing effect after stage clear
             BlessingEffectManager.onStageClear(player, stageNumber);
 
             stageIndex++;

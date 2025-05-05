@@ -1,4 +1,3 @@
-
 package main;
 
 import javax.swing.*;
@@ -14,7 +13,9 @@ public class RestOrContinueGUI extends JFrame {
         setLayout(new GridLayout(2, 1));
 
         JButton restButton = new JButton("Rest (Restore Full HP)");
+        restButton.setFocusPainted(false);
         JButton continueButton = new JButton("Continue");
+        continueButton.setFocusPainted(false);
 
         restButton.addActionListener(e -> {
             dispose();
