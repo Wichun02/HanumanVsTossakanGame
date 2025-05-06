@@ -18,7 +18,7 @@ public class GameFlowManager {
     private static int totalTurns = 0;
 
     public static void startGame(String playerName) {
-        player = new Player(playerName, 100, 30, 10, 15);
+        player = new Player(playerName, 10000, 30, 10, 15);
         enemies = EnemyStage.getEnemies();
         stageIndex = 0;
         totalTurns = 0;

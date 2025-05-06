@@ -1,4 +1,6 @@
+
 package character;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
@@ -31,12 +33,12 @@ public class EnemyStage {
             String name = names[bossIndex] + " Lv." + (i + 1);
 
             int[] stats = baseStats[bossIndex];
-            int hp = stats[0] + (int)(i * 7.5); // scaled for late-game toughness
+            int hp = stats[0] + (int)(i * 7.5);
             int atk = stats[1] + (i / 5);
             int def = stats[2] + (i / 6);
-            int spd = stats[3] + (i % 3 == 0 ? 1 : 0); // occasional speed bump
+            int spd = stats[3] + (i % 3 == 0 ? 1 : 0);
 
-            list.add(new Boss(name, hp, atk, def, spd));
+            list.add(new Boss(name, hp, atk, def, spd, i + 1));
         }
 
         return list;
